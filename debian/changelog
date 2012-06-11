@@ -1,0 +1,5 @@
+ceph-kdump-copy (0.1-1) UNRELEASED; urgency=low
+
+  * Initial release. (Closes: #XXXXXX)
+
+ -- Sage Weil <sage@newdream.net>  Mon, 11 Jun 2012 16:09:04 -0700

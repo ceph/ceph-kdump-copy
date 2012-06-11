@@ -1,0 +1,76 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+export DH_VERBOSE=1
+export DESTDIR=$(CURDIR)/debian/tmp
+
+export DEB_HOST_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
+export DEB_BUILD_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
+
+# Recommended snippet for Autoconf 2.52 or later
+ifeq ($(DEB_BUILD_GNU_TYPE), $(DEB_HOST_GNU_TYPE))
+  confflags += --build $(DEB_HOST_GNU_TYPE)
+else
+  confflags += --build $(DEB_BUILD_GNU_TYPE) --host $(DEB_HOST_GNU_TYPE)
+endif
+
+export DEB_HOST_ARCH      ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
+
+configure: configure-stamp
+configure-stamp:
+	dh_testdir
+	touch $@
+
+build-arch: build
+build-indep: build
+
+build: build-stamp
+build-stamp: configure-stamp  
+	dh_testdir
+	touch $@
+
+clean:
+	dh_testdir
+	dh_testroot
+	rm -f build-stamp configure-stamp
+	dh_clean
+
+install: build
+	dh_testdir
+	dh_testroot
+	dh_clean -k 
+	dh_installdirs
+
+	mkdir -p $(DESTDIR)/usr/bin
+	install -D -m 755 ceph-kdump-copy $(DESTDIR)/usr/bin
+
+# Add here commands to install the package into debian/testpack.
+# Build architecture-independent files here.
+binary-indep: build install
+
+# We have nothing to do by default.
+# Build architecture-dependent files here.
+binary-arch: build install
+	dh_testdir
+	dh_testroot
+	dh_installchangelogs 
+#	dh_installdocs --all ChangeLog
+	dh_installexamples
+	dh_install --sourcedir=$(DESTDIR) --list-missing
+	dh_installlogrotate
+	dh_installinit
+	#dh_installman
+	#dh_lintian
+	dh_link
+
+	dh_compress
+	dh_fixperms
+	#dh_makeshlibs -n  # we do the postinst/postrm scripts manually
+	dh_python2
+	dh_installdeb
+	dh_shlibdeps
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+
+binary: binary-indep binary-arch
+.PHONY: build clean binary-indep binary-arch binary install configure
